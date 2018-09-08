@@ -123,7 +123,11 @@ class OPC(protocol.Protocol):
                 OPC.pixelCount += discardBytes
                 i += discardBytes
                 if (OPC.pixelCount >= OPC.pktLength):
+                    print "Reseting parse state.."
                     OPC.parseState = 0
+                if (discardBytes == 0):
+                    OPC.parseState = 0
+                    print("Unexpected 0 bytes to discard")
             else:
                 print "Invalid OPC.parseState %d" % (OPC.parseState)
 

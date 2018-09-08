@@ -1,7 +1,7 @@
 # Art-Net protocol for Pimoroni Unicorn Hat
 # Open Pixel Control protocol for Pimoroni Unicorn Hat
 # License: MIT
-import unicornhat as unicorn
+import unicornhathd as unicorn
 from twisted.internet import protocol, endpoints
 from twisted.internet.protocol import DatagramProtocol
 from twisted.internet import reactor
@@ -44,7 +44,8 @@ class ArtNet(DatagramProtocol):
 
 class OPC(protocol.Protocol):
     # Parse Open Pixel Control protocol. See http://openpixelcontrol.org/.
-    MAX_LEDS = 64
+    MAX_LEDS = 256
+    WIDTH = 16
     parseState = 0
     pktChannel = 0
     pktCommand = 0
@@ -77,8 +78,8 @@ class OPC(protocol.Protocol):
                 OPC.parseState += 1
                 OPC.pixelCount = 0
                 OPC.pixelLimit = min(3*OPC.MAX_LEDS, OPC.pktLength)
-                #print "OPC.pktChannel %d OPC.pktCommand %d OPC.pktLength %d OPC.pixelLimit %d" % \
-                #    (OPC.pktChannel, OPC.pktCommand, OPC.pktLength, OPC.pixelLimit)
+                print "OPC.pktChannel %d OPC.pktCommand %d OPC.pktLength %d OPC.pixelLimit %d" % \
+                    (OPC.pktChannel, OPC.pktCommand, OPC.pktLength, OPC.pixelLimit)
                 if (OPC.pktLength > 3*OPC.MAX_LEDS):
                     print "Received pixel packet exeeds size of buffer! Data discarded."
                 if (OPC.pixelLimit == 0):
@@ -87,13 +88,13 @@ class OPC(protocol.Protocol):
                 copyBytes = min(OPC.pixelLimit - OPC.pixelCount, len(rawbytes) - i)
                 if (copyBytes > 0):
                     OPC.pixelCount += copyBytes
-                    #print "OPC.pixelLimit %d OPC.pixelCount %d copyBytes %d" % \
-                    #        (OPC.pixelLimit, OPC.pixelCount, copyBytes)
+                    print "OPC.pixelLimit %d OPC.pixelCount %d copyBytes %d" % \
+                            (OPC.pixelLimit, OPC.pixelCount, copyBytes)
                     if ((OPC.pktCommand == 0) and (OPC.pktChannel <= 1)):
                         x = 0
                         y = 0
                         iLimit = i + copyBytes
-                        while ((i < iLimit) and (y < 8)):
+                        while ((i < iLimit) and (y < OPC.WIDTH)):
                             #print "i %d" % (i)
                             r = rawbytes[i]
                             i += 1
@@ -104,7 +105,7 @@ class OPC(protocol.Protocol):
                             unicorn.set_pixel(x, y, r, g, b)
                             #print "x %d y %d r %d g %d b %d" % (x,y,r,g,b)
                             x += 1
-                            if (x > 7):
+                            if (x > (OPC.WIDTH - 1)):
                                 x = 0
                                 y += 1
 
